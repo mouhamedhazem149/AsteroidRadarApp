@@ -1,5 +1,6 @@
 app/src/androidTest/
 app/src/test/
+.idea/
 
 # Built application files
 *.apk

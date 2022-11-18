@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="paddint_default">12dp</dimen>
+    <dimen name="icon_size">56dp</dimen>
+    <dimen name="codename_text_size">20sp</dimen>
+    <dimen name="approach_date_text_size">16sp</dimen>
+</resources>
