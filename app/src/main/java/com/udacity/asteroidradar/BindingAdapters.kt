@@ -3,6 +3,9 @@ package com.udacity.asteroidradar
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.databinding.BindingAdapter
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.squareup.picasso.Picasso
+import com.udacity.asteroidradar.main.UpdateStatus
 
 @BindingAdapter("statusIcon")
 fun bindAsteroidStatusImage(imageView: ImageView, isHazardous: Boolean) {
@@ -23,6 +26,36 @@ fun bindDetailsStatusImage(imageView: ImageView, isHazardous: Boolean) {
     } else {
         imageView.setImageResource(R.drawable.asteroid_safe)
         imageView.contentDescription =  imageView.context.getString(R.string.not_hazardous_asteroid_image)
+    }
+}
+
+@BindingAdapter("imageOfDay")
+fun bindImageOfTheDay(imageView: ImageView,pictureOfDay: PictureOfDay?){
+    pictureOfDay?.let {
+        Picasso
+            .get()
+            .load(it.url)
+            .into(imageView)
+
+        imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+        imageView.contentDescription = it.title
+    }
+}
+
+@BindingAdapter("imageOfDayTitle")
+fun bindImageOfTheDayTitle(textView: TextView,pictureOfDay: PictureOfDay?) {
+    textView.text = pictureOfDay?.title
+        ?: ""
+}
+
+@BindingAdapter("updateStatus")
+fun bindUpdateStatus(swipeRefreshLayout: SwipeRefreshLayout,status: UpdateStatus){
+    when (status) {
+        UpdateStatus.Loading -> swipeRefreshLayout.isRefreshing = true
+        UpdateStatus.Success -> swipeRefreshLayout.isRefreshing = false
+        UpdateStatus.Fail -> {
+            swipeRefreshLayout.isRefreshing = false
+        }
     }
 }
 

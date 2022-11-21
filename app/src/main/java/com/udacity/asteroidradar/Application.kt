@@ -14,9 +14,9 @@ class AsteroidApplication : Application() {
     val applicationScope = CoroutineScope(Dispatchers.Default)
 
     private fun delayedInit() {
-        applicationScope.launch {
-            setupRecurringWork()
-        }
+//        applicationScope.launch {
+//            setupRecurringWork()
+//        }
     }
 
     private fun setupRecurringWork() {

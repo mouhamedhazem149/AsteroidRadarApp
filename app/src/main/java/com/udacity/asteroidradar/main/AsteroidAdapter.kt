@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
+import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -18,19 +19,19 @@ import java.util.*
 class AsteroidAdapter (val onClickListener: OnClickListener ) :
     ListAdapter<Asteroid, AsteroidAdapter.AsteroidViewHolder>(DiffCallback) {
 
-    private var list = listOf<Asteroid>()
-
-    fun setData(list: List<Asteroid>?){
-        this.list = list!!
-        submitList(list)
-    }
-
     class AsteroidViewHolder(private var binding: AsteroidItemBinding): RecyclerView.ViewHolder(binding.root) {
         fun bind(_asteroid: Asteroid,clickListener: OnClickListener) {
             binding.asteroid = _asteroid
             binding.clickListener = clickListener
             binding.executePendingBindings()
         }
+    }
+
+    private var list = listOf<Asteroid>()
+
+    fun setData(list: List<Asteroid>?){
+        this.list = list!!
+        submitList(list)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AsteroidViewHolder {

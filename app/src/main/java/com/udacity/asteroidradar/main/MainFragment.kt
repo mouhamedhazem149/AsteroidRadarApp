@@ -9,6 +9,7 @@ import com.squareup.picasso.Picasso
 import com.udacity.asteroidradar.R
 import com.udacity.asteroidradar.api.AsteroidApiFilter
 import com.udacity.asteroidradar.databinding.FragmentMainBinding
+import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 
 class MainFragment : Fragment() {
 
@@ -18,43 +19,27 @@ class MainFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
+
         val binding = FragmentMainBinding.inflate(inflater)
-
         binding.lifecycleOwner = this
-
         binding.viewModel = viewModel
 
         val adapter = AsteroidAdapter(AsteroidAdapter.OnClickListener {
             findNavController().navigate(MainFragmentDirections.actionShowDetail(it))
         })
-
         binding.asteroidRecycler.adapter =  adapter
 
         viewModel.asteroids.observe(viewLifecycleOwner) {
             adapter.setData(it)
         }
 
-        viewModel.dayPicture.observe(viewLifecycleOwner) {
-            Picasso
-                .get()
-                .load(it.url)
-                .into(binding.activityMainImageOfTheDay)
-
-            binding.activityMainImageOfTheDay.contentDescription = it.title
-        }
-
-        viewModel.status.observe(viewLifecycleOwner) {
-            when (it) {
-                UpdateStatus.Loading -> binding.statusLoadingWheel.visibility = View.VISIBLE
-                UpdateStatus.Success -> binding.statusLoadingWheel.visibility = View.GONE
-                UpdateStatus.Fail -> {
-                    binding.statusLoadingWheel.visibility = View.GONE
-                }
-            }
-        }
-
         viewModel.filter.observe(viewLifecycleOwner) {
             adapter.filter(it)
+        }
+
+        binding.refreshSwipe.setOnRefreshListener {
+            viewModel.updateAsteroids(context!!)
+            binding.refreshSwipe.isRefreshing = false
         }
 
         setHasOptionsMenu(true)
@@ -65,6 +50,13 @@ class MainFragment : Fragment() {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.main_overflow_menu, menu)
         super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (viewModel.status.value == UpdateStatus.Fail)
+            viewModel.updateAsteroids(context!!)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

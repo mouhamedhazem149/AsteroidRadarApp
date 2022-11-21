@@ -1,21 +1,24 @@
 package com.udacity.asteroidradar.main
 
 import android.app.Application
-import android.util.Log
-import androidx.lifecycle.*
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.PictureOfDay
 import com.udacity.asteroidradar.api.AsteroidApi
 import com.udacity.asteroidradar.api.AsteroidApiFilter
-import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
-import com.udacity.asteroidradar.database.AsteroidDao
-import com.udacity.asteroidradar.database.asDomainModel
 import com.udacity.asteroidradar.database.getDatabase
 import com.udacity.asteroidradar.repository.AsteroidsRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
-import org.json.JSONObject
+import kotlinx.coroutines.withTimeout
 import retrofit2.await
-import kotlin.coroutines.coroutineContext
 
 enum class UpdateStatus {
     Loading,
@@ -43,18 +46,30 @@ class MainViewModel(application: Application)  : AndroidViewModel(application) {
     get() = _dayPicture
 
     init {
-        updateAsteroids()
+        updateAsteroids(application.baseContext)
     }
 
-    fun updateAsteroids() {
+    fun updateAsteroids(context: Context) {
+
         viewModelScope.launch {
             _status.value = UpdateStatus.Loading
             try {
-                repository.refreshAsteroids()
+                if (!isOnline(context))
+                    throw Exception("Client is Offline")
 
-                val picture = AsteroidApi.retrofitService.getImageOfTheDay().await()
-                _dayPicture.value = picture
-
+                withTimeout(20000L) {
+                    awaitAll(
+                        async {
+                            repository.deleteOldAsteroids()
+                            repository.refreshAsteroids()
+                        },
+                        async {
+                            _dayPicture.postValue(
+                                AsteroidApi.retrofitService.getImageOfTheDay().await()
+                            )
+                        }
+                    )
+                }
                 _status.value = UpdateStatus.Success
             } catch (exception: Exception) {
                 _status.value = UpdateStatus.Fail
@@ -66,13 +81,22 @@ class MainViewModel(application: Application)  : AndroidViewModel(application) {
         _filter.value = filter
     }
 
-    class Factory(val app: Application) : ViewModelProvider.Factory {
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return MainViewModel(app) as T
+    //COPYRIGHT
+    //https://stackoverflow.com/questions/51141970/check-internet-connectivity-android-in-kotlin
+    fun isOnline(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (connectivityManager != null) {
+            val capabilities =
+                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            if (capabilities != null) {
+                if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                    || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                    || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                    return true
+                }
             }
-            throw IllegalArgumentException("Unable to construct viewmodel")
         }
+        return false
     }
 }

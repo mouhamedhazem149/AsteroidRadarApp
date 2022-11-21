@@ -3,10 +3,8 @@ package com.udacity.asteroidradar.api
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import com.squareup.moshi.*
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.Constants
 import com.udacity.asteroidradar.PictureOfDay
-import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -14,10 +12,10 @@ import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-enum class AsteroidApiFilter(val value: String) {
-    SHOW_WEEK("week"),
-    SHOW_TODAY("today"),
-    SHOW_SAVED("saved")
+enum class AsteroidApiFilter{
+    SHOW_WEEK,
+    SHOW_TODAY,
+    SHOW_SAVED
 }
 
     interface AsteroidApiService {
